@@ -110,12 +110,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/'),
         ),
-        actions: [
-          TextButton(
-            onPressed: appProvider.contentBlocks.isNotEmpty ? _submitRequirements : null,
-            child: const Text('Build'),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Center(
@@ -190,9 +184,29 @@ class _CaptureScreenState extends State<CaptureScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showBlockTypeSelector,
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Build button (only show when there are blocks)
+          if (appProvider.contentBlocks.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: FloatingActionButton.extended(
+                onPressed: _submitRequirements,
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.build),
+                label: const Text('Build'),
+                heroTag: "build",
+              ),
+            ),
+          // Add block button
+          FloatingActionButton(
+            onPressed: _showBlockTypeSelector,
+            child: const Icon(Icons.add),
+            heroTag: "add",
+          ),
+        ],
       ),
     );
   }

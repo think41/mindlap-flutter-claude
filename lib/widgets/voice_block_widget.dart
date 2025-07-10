@@ -43,23 +43,7 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
     _descriptionController.addListener(_updateBlock);
     _notesController.addListener(_updateBlock);
     
-    // Set up audio player listeners
-    _audioPlayer.positionStream.listen((position) {
-      if (mounted) {
-        setState(() {
-          _playbackPosition = position;
-        });
-      }
-    });
-    
-    _audioPlayer.playerStateStream.listen((state) {
-      if (mounted && state.processingState == ProcessingState.completed) {
-        setState(() {
-          _recordingState = RecordingState.stopped;
-          _playbackPosition = Duration.zero;
-        });
-      }
-    });
+    _setupAudioListeners();
 
     // Update state if block already has recording
     if (widget.block.hasRecording) {
@@ -68,13 +52,82 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
     }
   }
 
+  void _setupAudioListeners() {
+    // Set up audio player listeners with error handling
+    _audioPlayer.positionStream.listen(
+      (position) {
+        if (mounted) {
+          setState(() {
+            _playbackPosition = position;
+          });
+        }
+      },
+      onError: (error) {
+        print('Position stream error: $error');
+      },
+    );
+    
+    _audioPlayer.playerStateStream.listen(
+      (state) {
+        if (mounted) {
+          if (state.processingState == ProcessingState.completed) {
+            setState(() {
+              _recordingState = RecordingState.stopped;
+              _playbackPosition = Duration.zero;
+            });
+          } else if (state.processingState == ProcessingState.idle) {
+            setState(() {
+              _recordingState = RecordingState.stopped;
+            });
+          }
+        }
+      },
+      onError: (error) {
+        print('Player state stream error: $error');
+        if (mounted) {
+          setState(() {
+            _recordingState = RecordingState.stopped;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void didUpdateWidget(VoiceBlockWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Update controllers if block data changed
+    if (oldWidget.block.description != widget.block.description) {
+      _descriptionController.text = widget.block.description;
+    }
+    if (oldWidget.block.recordingNotes != widget.block.recordingNotes) {
+      _notesController.text = widget.block.recordingNotes ?? '';
+    }
+    
+    // Update recording state if block recording status changed
+    if (oldWidget.block.hasRecording != widget.block.hasRecording) {
+      if (widget.block.hasRecording) {
+        _recordingState = RecordingState.stopped;
+        _recordingDuration = widget.block.duration ?? Duration.zero;
+      } else {
+        _recordingState = RecordingState.idle;
+        _recordingDuration = Duration.zero;
+        _playbackPosition = Duration.zero;
+      }
+    }
+  }
+
   @override
   void dispose() {
     _descriptionController.dispose();
     _notesController.dispose();
     _recordingTimer?.cancel();
-    _audioRecorder.dispose();
+    
+    // Properly dispose of audio resources
     _audioPlayer.dispose();
+    _audioRecorder.dispose();
+    
     super.dispose();
   }
 
@@ -89,48 +142,82 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
 
   Future<void> _startRecording() async {
     try {
-      if (kIsWeb) {
-        // Web permissions are handled automatically by the browser
-      } else {
-        // Mobile permissions
+      // Check and request permissions
+      if (!kIsWeb) {
         final permission = await Permission.microphone.request();
         if (permission != PermissionStatus.granted) {
+          print('Microphone permission denied');
           return;
         }
       }
 
-      if (await _audioRecorder.hasPermission()) {
-        const config = RecordConfig(
+      // Check if recorder has permission
+      if (!await _audioRecorder.hasPermission()) {
+        print('Audio recorder does not have permission');
+        return;
+      }
+
+      // Configure recording based on platform
+      RecordConfig config;
+      String? recordingPath;
+      
+      if (kIsWeb) {
+        // Web-specific configuration
+        config = const RecordConfig(
           encoder: AudioEncoder.wav,
           bitRate: 128000,
           sampleRate: 44100,
         );
-        
-        await _audioRecorder.start(config, path: 'temp_recording_${widget.block.id}.wav');
-        setState(() {
-          _recordingState = RecordingState.recording;
-          _recordingDuration = Duration.zero;
-        });
-        
-        // Start timer to track recording duration
-        _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          if (mounted) {
-            setState(() {
-              _recordingDuration = Duration(seconds: timer.tick);
-            });
-          }
-        });
+        // No path needed for web
+      } else {
+        // Mobile configuration with path
+        config = const RecordConfig(
+          encoder: AudioEncoder.wav,
+          bitRate: 128000,
+          sampleRate: 44100,
+        );
+        recordingPath = 'temp_recording_${widget.block.id}.wav';
       }
+      
+      // Start recording
+      if (kIsWeb) {
+        // For web, we don't specify a path - the library handles it internally
+        await _audioRecorder.start(config, path: 'temp_recording_${widget.block.id}');
+      } else {
+        // For mobile, use the specified path
+        await _audioRecorder.start(config, path: recordingPath!);
+      }
+      
+      setState(() {
+        _recordingState = RecordingState.recording;
+        _recordingDuration = Duration.zero;
+      });
+      
+      // Start timer to track recording duration
+      _recordingTimer?.cancel(); // Cancel any existing timer
+      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted && _recordingState == RecordingState.recording) {
+          setState(() {
+            _recordingDuration = Duration(seconds: timer.tick);
+          });
+        } else {
+          timer.cancel();
+        }
+      });
     } catch (e) {
       print('Error starting recording: $e');
+      setState(() {
+        _recordingState = RecordingState.idle;
+      });
     }
   }
 
   Future<void> _stopRecording() async {
     try {
       _recordingTimer?.cancel();
+      
       final path = await _audioRecorder.stop();
-      if (path != null) {
+      if (path != null && path.isNotEmpty) {
         final appProvider = context.read<AppProvider>();
         final updatedBlock = widget.block.copyWith(
           audioPath: path,
@@ -141,29 +228,56 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
         setState(() {
           _recordingState = RecordingState.stopped;
         });
+      } else {
+        print('Recording path is null or empty');
+        setState(() {
+          _recordingState = RecordingState.idle;
+        });
       }
     } catch (e) {
       print('Error stopping recording: $e');
+      setState(() {
+        _recordingState = RecordingState.idle;
+      });
     }
   }
 
   Future<void> _playRecording() async {
     try {
-      if (widget.block.audioPath != null) {
-        // For web, decode the URL-encoded blob URL
-        String audioPath = widget.block.audioPath!;
-        if (audioPath.startsWith('blob%3A')) {
-          audioPath = Uri.decodeFull(audioPath);
-        }
-        
-        await _audioPlayer.setUrl(audioPath);
-        
-        setState(() {
-          _recordingState = RecordingState.playing;
-        });
-        
-        await _audioPlayer.play();
+      if (widget.block.audioPath == null || widget.block.audioPath!.isEmpty) {
+        print('No audio path available for playback');
+        return;
       }
+
+      // Stop any current playback
+      await _audioPlayer.stop();
+      
+      String audioPath = widget.block.audioPath!;
+      
+      // Handle different URL formats
+      if (audioPath.startsWith('blob%3A')) {
+        audioPath = Uri.decodeFull(audioPath);
+      }
+      
+      print('Playing audio from: $audioPath');
+      
+      // Set the audio source
+      if (kIsWeb && audioPath.startsWith('blob:')) {
+        // For web blob URLs, use setUrl
+        await _audioPlayer.setUrl(audioPath);
+      } else if (!kIsWeb) {
+        // For mobile file paths
+        await _audioPlayer.setFilePath(audioPath);
+      } else {
+        // Fallback for other URL types
+        await _audioPlayer.setUrl(audioPath);
+      }
+      
+      setState(() {
+        _recordingState = RecordingState.playing;
+      });
+      
+      await _audioPlayer.play();
     } catch (e) {
       print('Error playing recording: $e');
       setState(() {
@@ -173,10 +287,17 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
   }
 
   Future<void> _pausePlayback() async {
-    await _audioPlayer.pause();
-    setState(() {
-      _recordingState = RecordingState.stopped;
-    });
+    try {
+      await _audioPlayer.pause();
+      setState(() {
+        _recordingState = RecordingState.stopped;
+      });
+    } catch (e) {
+      print('Error pausing playback: $e');
+      setState(() {
+        _recordingState = RecordingState.stopped;
+      });
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -255,19 +376,30 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
           // Delete recording button (if recording exists)
           if (widget.block.hasRecording)
             IconButton(
-              onPressed: () {
-                final appProvider = context.read<AppProvider>();
-                final updatedBlock = widget.block.copyWith(
-                  audioPath: null,
-                  audioData: null,
-                  duration: null,
-                );
-                appProvider.updateContentBlock(updatedBlock);
-                setState(() {
-                  _recordingState = RecordingState.idle;
-                  _recordingDuration = Duration.zero;
-                  _playbackPosition = Duration.zero;
-                });
+              onPressed: () async {
+                try {
+                  // Stop any current playback or recording
+                  await _audioPlayer.stop();
+                  if (_recordingState == RecordingState.recording) {
+                    await _audioRecorder.stop();
+                  }
+                  _recordingTimer?.cancel();
+                  
+                  final appProvider = context.read<AppProvider>();
+                  final updatedBlock = widget.block.copyWith(
+                    audioPath: null,
+                    audioData: null,
+                    duration: null,
+                  );
+                  appProvider.updateContentBlock(updatedBlock);
+                  setState(() {
+                    _recordingState = RecordingState.idle;
+                    _recordingDuration = Duration.zero;
+                    _playbackPosition = Duration.zero;
+                  });
+                } catch (e) {
+                  print('Error deleting recording: $e');
+                }
               },
               icon: Icon(
                 Icons.delete_outline,
