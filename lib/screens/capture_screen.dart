@@ -104,10 +104,19 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFAFBFA),
       appBar: AppBar(
-        title: Text(selectedArchetype.title),
+        backgroundColor: const Color(0xFFFAFBFA),
+        title: Text(
+          selectedArchetype.title,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF19211A),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF19211A)),
           onPressed: () => context.go('/'),
         ),
       ),
@@ -122,20 +131,19 @@ class _CaptureScreenState extends State<CaptureScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         'Tell us about your project',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          color: const Color(0xFF19211A),
+                          fontWeight: FontWeight.w600,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      const SizedBox(height: 12),
+                      Text(
                         'Add blocks to describe your requirements',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF19211A).withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -193,10 +201,16 @@ class _CaptureScreenState extends State<CaptureScreen> {
               padding: const EdgeInsets.only(bottom: 16),
               child: FloatingActionButton.extended(
                 onPressed: _submitRequirements,
-                backgroundColor: Colors.green,
+                backgroundColor: const Color(0xFF19211A),
                 foregroundColor: Colors.white,
-                icon: const Icon(Icons.build),
-                label: const Text('Build'),
+                icon: const Icon(Icons.rocket_launch_rounded),
+                label: Text(
+                  'Build',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 heroTag: "build",
               ),
             ),

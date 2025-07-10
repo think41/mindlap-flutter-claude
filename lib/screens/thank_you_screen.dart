@@ -9,8 +9,10 @@ class ThankYouScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appProvider = context.watch<AppProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFAFBFA),
       body: SafeArea(
         child: Center(
           child: Container(
@@ -19,52 +21,73 @@ class ThankYouScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.check_circle_outline,
-                  size: 100,
-                  color: Colors.green,
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF19211A),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 64,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
+                Text(
                   'Thank You!',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    color: const Color(0xFF19211A),
+                    fontWeight: FontWeight.w700,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Your requirements have been captured successfully.',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF19211A).withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'We will get back to you soon with your project details.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF19211A).withOpacity(0.6),
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 
                 // Summary Card
-                Card(
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF19211A).withOpacity(0.1),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: const Offset(0, 4),
+                        blurRadius: 12,
+                        color: const Color(0xFF19211A).withOpacity(0.08),
+                      ),
+                    ],
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Project Summary',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: const Color(0xFF19211A),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 16),

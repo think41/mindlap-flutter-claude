@@ -309,10 +309,10 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
 
   Widget _buildRecordingControls() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: const Color(0xFF19211A).withOpacity(0.1))),
       ),
       child: Row(
         children: [
@@ -481,34 +481,33 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.orange.shade50,
+                  border: Border.all(color: const Color(0xFF19211A).withOpacity(0.1)),
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF0F8FF), // Alice blue background
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Header with icon
                     Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF19211A),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.mic,
+                          const Icon(
+                            Icons.mic_rounded,
                             size: 20,
-                            color: Colors.orange.shade700,
+                            color: Colors.white,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'Voice Note',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              color: Colors.orange.shade700,
                             ),
                           ),
                         ],
