@@ -29,3 +29,5 @@ See `.github/workflows/ci.yaml` for build, test, and release steps.
 ## Security & Compliance
 HTTPS only; JWT handled by Dio interceptor; secrets via CI env vars.
 
+
+You have access to all linux command line tools like grep, sed, etc.

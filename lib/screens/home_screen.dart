@@ -3,9 +3,77 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../models/archetype.dart';
 import '../providers/app_provider.dart';
+import '../widgets/progress_tracker.dart';
+import '../widgets/mindlap_logo.dart';
+import '../utils/ux_constants.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _showComparisonDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Compare Project Types'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: Archetype.values.map((archetype) {
+              return Card(
+                child: ListTile(
+                  leading: Icon(_getArchetypeIcon(archetype)),
+                  title: Text(archetype.title),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(archetype.description),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getArchetypeBenefit(archetype),
+                        style: const TextStyle(
+                          color: Color(0xFF19211A),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getArchetypeIcon(Archetype archetype) {
+    switch (archetype) {
+      case Archetype.voiceAgent:
+        return Icons.mic_rounded;
+      case Archetype.contentCreation:
+        return Icons.edit_rounded;
+      case Archetype.landingPage:
+        return Icons.web_rounded;
+    }
+  }
+
+  String _getArchetypeBenefit(Archetype archetype) {
+    switch (archetype) {
+      case Archetype.voiceAgent:
+        return UXConstants.archetypeBenefits['voice_agent']!;
+      case Archetype.contentCreation:
+        return UXConstants.archetypeBenefits['content_creation']!;
+      case Archetype.landingPage:
+        return UXConstants.archetypeBenefits['landing_page']!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,29 +83,20 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFBFA), // Subtle off-white background
       body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // MindLap branding
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF19211A),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    'MindLap',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                // Progress tracker
+                const SizedBox(height: 16),
+                const ProgressTracker(currentStep: 0),
+                const SizedBox(height: 32),
+                
+                // MindLap branding  
+                const MindLapLogo(size: 48),
                 const SizedBox(height: 32),
                 Text(
                   'Choose Your Project Type',
@@ -64,7 +123,22 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                
+                // Compare options link
+                TextButton(
+                  onPressed: () => _showComparisonDialog(context),
+                  child: Text(
+                    'Not sure? → Compare options',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF19211A),
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
                 Text(
                   'Powered by AI • Built for Innovation',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -75,6 +149,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
@@ -106,6 +181,17 @@ class _ArchetypeCardState extends State<_ArchetypeCard> {
         return Icons.edit_rounded;
       case Archetype.landingPage:
         return Icons.web_rounded;
+    }
+  }
+
+  String _getBenefit(Archetype archetype) {
+    switch (archetype) {
+      case Archetype.voiceAgent:
+        return UXConstants.archetypeBenefits['voice_agent']!;
+      case Archetype.contentCreation:
+        return UXConstants.archetypeBenefits['content_creation']!;
+      case Archetype.landingPage:
+        return UXConstants.archetypeBenefits['landing_page']!;
     }
   }
 
@@ -187,6 +273,14 @@ class _ArchetypeCardState extends State<_ArchetypeCard> {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF19211A).withOpacity(0.7),
                         height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _getBenefit(widget.archetype),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF19211A),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],

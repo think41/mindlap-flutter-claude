@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../models/content_block.dart';
 import '../providers/app_provider.dart';
+import '../utils/ux_constants.dart';
 
 class ImageBlockWidget extends StatefulWidget {
   final ImageBlock block;
@@ -148,18 +149,46 @@ class _ImageBlockWidgetState extends State<ImageBlockWidget> {
                               ? const BorderRadius.vertical(bottom: Radius.circular(8))
                               : null,
                         ),
-                        child: TextField(
-                          controller: _captionController,
-                          style: const TextStyle(fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'Add a caption...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 14,
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _captionController,
+                              style: const TextStyle(fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: 'Add a caption...',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 14,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
                             ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                          ),
+                            if (widget.block.imageData != null) ...[
+                              const SizedBox(height: 8),
+                              // Privacy microcopy
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.lock_outline,
+                                    size: 12,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      UXConstants.privacyText['image']!,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade500,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                   ],

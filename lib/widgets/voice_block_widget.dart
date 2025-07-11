@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/content_block.dart';
 import '../providers/app_provider.dart';
+import '../utils/ux_constants.dart';
 
 enum RecordingState { idle, recording, stopped, playing }
 
@@ -539,19 +540,45 @@ class _VoiceBlockWidgetState extends State<VoiceBlockWidget> {
                     // Optional recording notes
                     Container(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: TextField(
-                        controller: _notesController,
-                        maxLines: 2,
-                        style: const TextStyle(fontSize: 12),
-                        decoration: InputDecoration(
-                          hintText: 'Additional notes (optional)...',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 12,
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _notesController,
+                            maxLines: 2,
+                            style: const TextStyle(fontSize: 12),
+                            decoration: InputDecoration(
+                              hintText: 'Additional notes (optional)...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 12,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
+                          const SizedBox(height: 8),
+                          // Privacy microcopy
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.lock_outline,
+                                size: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  UXConstants.privacyText['voice']!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade500,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
